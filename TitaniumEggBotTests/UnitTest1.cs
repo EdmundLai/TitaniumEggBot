@@ -6,6 +6,7 @@ namespace TitaniumEggBotTests
 {
     public class UnitTest1
     {
+        // Needs to be revised
         [Fact]
         public async void CheckNumberOfCharacters_LittleGod()
         {

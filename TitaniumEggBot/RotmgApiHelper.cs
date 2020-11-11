@@ -12,174 +12,156 @@ namespace TitaniumEggBot
     public class RotmgApiHelper
     {
 
-		public async static Task<IDocument> GetDocumentAsync(string address)
+        public async static Task<IDocument> GetDocumentAsync(string address)
         {
-			var config = Configuration.Default.WithDefaultLoader();
-			var context = BrowsingContext.New(config);
-			var document = await context.OpenAsync(address);
+            var config = Configuration.Default.WithDefaultLoader();
+            var context = BrowsingContext.New(config);
+            var document = await context.OpenAsync(address);
 
-			return document;
-		}
+            return document;
+        }
 
-		public static string GetStarRanking(int numStars)
+        public static string GetStarRanking(int numStars)
         {
-			if(numStars <= 15 && numStars >= 1)
+            if(numStars <= 15 && numStars >= 1)
             {
-				return "Cyan";
+                return "Cyan";
             } else if(numStars <= 31)
             {
-				return "Blue";
+                return "Blue";
             } else if(numStars <= 47)
             {
-				return "Red";
+                return "Red";
             } else if(numStars <= 63)
             {
-				return "Orange";
+                return "Orange";
             } else if(numStars <= 79)
             {
-				return "Yellow";
+                return "Yellow";
             } else if(numStars == 80)
             {
-				return "White";
+                return "White";
             } else
             {
-				return "Invalid";
+                return "Invalid";
             }
         }
 
         public async static Task<RotmgPlayer> GetCharacterInfoInListAsync(string player)
         {
-			//List<string> outputInfo = new List<string>();
+            var address = $"https://www.realmeye.com/player/{player}";
+            var document = await GetDocumentAsync(address);
+            string playerName = document.QuerySelector(".entity-name").TextContent;
+            string rank = document.QuerySelector(".star-container").TextContent;
 
-			var address = $"https://www.realmeye.com/player/{player}";
-			var document = await GetDocumentAsync(address);
-			string playerName = document.QuerySelector(".entity-name").TextContent;
-			string rank = document.QuerySelector(".star-container").TextContent;
+            var tableBody = document.QuerySelector("#e tbody");
 
-			
+            // If TextContent doesn't end with a /8 it isn't valid
+            if (!tableBody.TextContent.EndsWith("/8"))
+            {
+                return null;
+            }
+            else
+            {
+                List<RotmgCharacter> characters = new List<RotmgCharacter>();
 
-			var tableBody = document.QuerySelector("#e tbody");
+                var playerCharacterNodes = tableBody.ChildNodes;
+                foreach (var charNode in playerCharacterNodes)
+                {
+                    var charInfoRows = charNode.ChildNodes;
+                    //sb.Append($"{charNode.TextContent}\n");
+                    string rotmgClassName = charInfoRows[2].TextContent;
+                    string classLevel = charInfoRows[3].TextContent;
+                    string fame = charInfoRows[5].TextContent;
+                    string rankedPlace = charInfoRows[7].TextContent;
+                    
+                    var charItems = charInfoRows[8].ChildNodes;
+                    string stats = charInfoRows[9].TextContent;
 
-			// If TextContent doesn't end with a /8 it isn't valid
-			if (!tableBody.TextContent.EndsWith("/8"))
-			{
-				//await ReplyAsync("Player not found.");
-				//outputInfo.Add("Player not found.");
-				return null;
-			}
-			else
-			{
-				List<RotmgCharacter> characters = new List<RotmgCharacter>();
+                    RotmgEquipment equipment = new RotmgEquipment();
 
-				var playerCharacterNodes = tableBody.ChildNodes;
-				foreach (var charNode in playerCharacterNodes)
-				{
-					//StringBuilder outputStringbuilder = new StringBuilder();
-					var charInfoRows = charNode.ChildNodes;
-					//sb.Append($"{charNode.TextContent}\n");
-					string rotmgClassName = charInfoRows[2].TextContent;
-					string classLevel = charInfoRows[3].TextContent;
-					string fame = charInfoRows[5].TextContent;
-					string rankedPlace = charInfoRows[7].TextContent;
-					
-					var charItems = charInfoRows[8].ChildNodes;
-					string stats = charInfoRows[9].TextContent;
+                    for(int i = 0; i < charItems.Length; i++)
+                    {
+                        var itemNode = charItems[i];
+                        var itemInfo = (IElement)itemNode.FirstChild.FirstChild;
 
-					//StringBuilder itemStringbuilder = new StringBuilder("Equipment:\n");
+                        string itemName = itemInfo.GetAttribute("title");
 
-					RotmgEquipment equipment = new RotmgEquipment();
-
-					for(int i = 0; i < charItems.Length; i++)
-					{
-						var itemNode = charItems[i];
-						var itemInfo = (IElement)itemNode.FirstChild.FirstChild;
-
-						//itemString.Append($"{itemInfo.GetType().ToString()} ");
-						string itemName = itemInfo.GetAttribute("title");
-						//string itemClass = itemInfo.GetAttribute("class");
-						//itemStringbuilder.Append($"{itemName}\n");
-
-						switch(i)
+                        switch(i)
                         {
-							case 0:
-								equipment.Weapon = itemName;
-								break;
-							case 1:
-								equipment.Ability = itemName;
-								break;
-							case 2:
-								equipment.Armor = itemName;
-								break;
-							case 3:
-								equipment.Ring = itemName;
-								break;
-							default:
-								equipment.Backpack = itemName;
-								break;
+                            case 0:
+                                equipment.Weapon = itemName;
+                                break;
+                            case 1:
+                                equipment.Ability = itemName;
+                                break;
+                            case 2:
+                                equipment.Armor = itemName;
+                                break;
+                            case 3:
+                                equipment.Ring = itemName;
+                                break;
+                            default:
+                                equipment.Backpack = itemName;
+                                break;
                         }
-					}
+                    }
 
-					int numLevel;
-					int numRankedPlace;
-					int numFame;
+                    int numLevel;
+                    int numRankedPlace;
+                    int numFame;
 
-					try
-					{
-						numLevel = Int32.Parse(classLevel);
-						numRankedPlace = Int32.Parse(rankedPlace);
-						numFame = Int32.Parse(fame);
-					}
-					catch
-					{
-						Console.WriteLine("either classLevel or ranked place (or both) was/were not an integer");
-						numLevel = -1;
-						numRankedPlace = -1;
-						numFame = -1;
-					}
+                    try
+                    {
+                        numLevel = Int32.Parse(classLevel);
+                        numRankedPlace = Int32.Parse(rankedPlace);
+                        numFame = Int32.Parse(fame);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("either classLevel or ranked place (or both) was/were not an integer");
+                        numLevel = -1;
+                        numRankedPlace = -1;
+                        numFame = -1;
+                    }
 
 
-					RotmgCharacter character = new RotmgCharacter
-					{
-						Class = rotmgClassName,
-						Level = numLevel,
-						RankedPlace = numRankedPlace,
-						Fame = numFame,
-						Stats = stats,
-						Equipment = equipment
-					};
+                    RotmgCharacter character = new RotmgCharacter
+                    {
+                        Class = rotmgClassName,
+                        Level = numLevel,
+                        RankedPlace = numRankedPlace,
+                        Fame = numFame,
+                        Stats = stats,
+                        Equipment = equipment
+                    };
 
-					characters.Add(character);
+                    characters.Add(character);
+                }
 
-					//outputStringbuilder.Append($"Ranked {rankedPlace} Level {classLevel} {rotmgClassName}\n");
-					//outputStringbuilder.Append(itemStringbuilder);
-
-					//outputInfo.Add(outputStringbuilder.ToString());
-				}
-
-				int numRank;
+                int numRank;
 
                 try
                 {
-					numRank = Int32.Parse(rank);
+                    numRank = Int32.Parse(rank);
                 }
                 catch
                 {
                     Console.WriteLine("rank was not an integer");
-					numRank = -1;
+                    numRank = -1;
                 }
 
 
-				RotmgPlayer playerInfo = new RotmgPlayer
-				{
-					PlayerName = playerName,
-					RealmeyeURL = address,
-					Rank = numRank,
-					Characters = characters
-				};
+                RotmgPlayer playerInfo = new RotmgPlayer
+                {
+                    PlayerName = playerName,
+                    RealmeyeURL = address,
+                    Rank = numRank,
+                    Characters = characters
+                };
 
-				return playerInfo;
-			}
-			//return outputInfo;
-		}
+                return playerInfo;
+            }
+        }
     }
 }

@@ -11,37 +11,10 @@ namespace TitaniumEggBot
 {
     class Program
     {
-        //private readonly DiscordSocketClient _client;
-
-        //private readonly CommandService _commands;
-
-        //private readonly IServiceProvider _services;
-
         public static IConfigurationRoot _configuration { get; set; }
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
-
-        //private Program()
-        //{
-            //_client = new DiscordSocketClient(new DiscordSocketConfig
-            //{
-            //    LogLevel = LogSeverity.Info,
-            //});
-
-            //_commands = new CommandService(new CommandServiceConfig
-            //{
-            //    LogLevel = LogSeverity.Info,
-            //    CaseSensitiveCommands = false,
-            //});
-
-            //_client.Log += Log;
-
-            //_commands.Log += Log;
-
-            // Setup your DI container
-            //_services = this.ConfigureServices();
-        //}
 
         public async Task MainAsync()
         {
@@ -75,6 +48,7 @@ namespace TitaniumEggBot
         // If this method is getting pretty long, you can seperate it out into another file using partials.
         private ServiceProvider ConfigureServices()
         {
+            // adding configuration to get the tokens from appsettings.json file
             _configuration = new ConfigurationBuilder()
                    .SetBasePath(Directory.GetCurrentDirectory())
                    .AddJsonFile("appsettings.json")

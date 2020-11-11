@@ -4,6 +4,8 @@ using System.Text;
 
 namespace TitaniumEggBot
 {
+    // Stolen from StackOverflow
+    // Used to add suffixes to numbers
     public static class IntegerExtensions
     {
         public static string DisplayWithSuffix(this int num)

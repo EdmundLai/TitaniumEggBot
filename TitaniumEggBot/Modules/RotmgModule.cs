@@ -11,46 +11,52 @@ using TitaniumEggBot.Rotmg;
 
 namespace TitaniumEggBot.Modules
 {
-	// Create a module with no prefix
-	public class RotmgModule : ModuleBase<SocketCommandContext>
-	{
-        // ~say hello world -> hello world
+    // Create a module with no prefix
+    public class RotmgModule : ModuleBase<SocketCommandContext>
+    {
+        /// <summary>
+        /// Getting detailed info about ROTMG player's characters
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
         [Command("realmplayer")]
         [Summary("Gets info about ROTMG player.")]
         public async Task GetInfoAsync([Remainder][Summary("player in-game name")] string player)
         {
             RotmgPlayer playerInfo = await RotmgApiHelper.GetCharacterInfoInListAsync(player);
 
-            List<EmbedFieldBuilder> embedFields = new List<EmbedFieldBuilder>();
-
-            foreach (var character in playerInfo.Characters)
+            if(playerInfo is null)
             {
-                EmbedFieldBuilder embedField = new EmbedFieldBuilder
+                await ReplyAsync("Player not found.");
+            } else
+            {
+                List<EmbedFieldBuilder> embedFields = new List<EmbedFieldBuilder>();
+
+                foreach (var character in playerInfo.Characters)
                 {
-                    Name = $"Ranked {character.RankedPlace.DisplayWithSuffix()} {character.Stats} {character.Class}",
-                    Value = $"Weapon: {character.Equipment.Weapon}\nAbility: {character.Equipment.Ability}\nArmor: {character.Equipment.Armor}\nRing: {character.Equipment.Ring}"
+                    EmbedFieldBuilder embedField = new EmbedFieldBuilder
+                    {
+                        Name = $"Ranked {character.RankedPlace.DisplayWithSuffix()} {character.Stats} {character.Class}",
+                        Value = $"Weapon: {character.Equipment.Weapon}\nAbility: {character.Equipment.Ability}\nArmor: {character.Equipment.Armor}\nRing: {character.Equipment.Ring}"
+                    };
+                    embedFields.Add(embedField);
+                }
+
+                var embedBuilder = new EmbedBuilder
+                {
+                    Title = playerInfo.PlayerName,
+                    Description = $"{RotmgApiHelper.GetStarRanking(playerInfo.Rank)} star with {playerInfo.Characters.Count} characters",
+                    Fields = embedFields,
+                    Url = playerInfo.RealmeyeURL
                 };
-                embedFields.Add(embedField);
+
+                var embed = embedBuilder.WithAuthor(Context.Client.CurrentUser)
+                    .WithCurrentTimestamp()
+                    .Build();
+
+                await ReplyAsync(embed: embed);
             }
-
-
-            var embedBuilder = new EmbedBuilder
-            {
-                Title = playerInfo.PlayerName,
-                Description = $"{RotmgApiHelper.GetStarRanking(playerInfo.Rank)} star with {playerInfo.Characters.Count} characters",
-                Fields = embedFields,
-                Url = playerInfo.RealmeyeURL
-            };
-
-            var embed = embedBuilder.WithAuthor(Context.Client.CurrentUser)
-                .WithCurrentTimestamp()
-                .Build();
-
-            await ReplyAsync(embed: embed);
-
-			
-
-		}
+        }
 
         // template for using embeds
         [Command("embed")]
