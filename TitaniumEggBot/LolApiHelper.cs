@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TitaniumEggBot.LeagueOfLegends;
 
 namespace TitaniumEggBot
 {
@@ -31,52 +32,93 @@ namespace TitaniumEggBot
                 return $"{summonerData.Name} is {soloRank.Tier} {soloRank.Rank}";
         }
 
-        public async Task<string> GetMatchHistoryStringAsync(string summonerName, int queueType)
+        public async Task<MatchHistory> GetMatchHistoryAsync(string summonerName, int queueType)
         {
             var summonerData = await _riotApi.SummonerV4.GetBySummonerNameAsync(Region.NA, summonerName);
 
-            // 450 is ARAM
-            var matchlist = await _riotApi.MatchV4.GetMatchlistAsync(Region.NA, summonerData.AccountId, queue: new[] { queueType }, endIndex: 10);
-
-
-            // Get match results (done asynchronously -> not blocking -> fast).
-            var matchDataTasks = matchlist.Matches.Select(
-                   matchMetadata => _riotApi.MatchV4.GetMatchAsync(Region.NA, matchMetadata.GameId)
-               ).ToArray();
-            // Wait for all task requests to complete asynchronously.
-            var matchDatas = await Task.WhenAll(matchDataTasks);
-
-            StringBuilder sb = new StringBuilder($"Match history for {summonerData.Name}:\n");
-
-            for (var i = 0; i < matchDatas.Count(); i++)
+            if(summonerData is null)
             {
-                var matchData = matchDatas[i];
-                // Get this summoner's participant ID info.
-                var participantIdData = matchData.ParticipantIdentities
-                    .First(pi => summonerData.Id.Equals(pi.Player.SummonerId));
-                // Find the corresponding participant.
-                var participant = matchData.Participants
-                    .First(p => p.ParticipantId == participantIdData.ParticipantId);
+                // return null data if summoner cannot be found
+                return null;
+            } else
+            {
+                // 450 is ARAM
+                var matchlist = await _riotApi.MatchV4.GetMatchlistAsync(Region.NA, summonerData.AccountId, queue: new[] { queueType }, endIndex: 5);
 
-                var win = participant.Stats.Win;
-                var champ = (Champion)participant.ChampionId;
-                var k = participant.Stats.Kills;
-                var d = participant.Stats.Deaths;
-                var a = participant.Stats.Assists;
-                var kda = (k + a) / (float)d;
+                // in game name
+                string ign = summonerData.Name;
 
-                string winOrLoss = win ? "Win" : "Loss";
+                if(matchlist is null)
+                {
+                    // return history with null match list
+                    return new MatchHistory { SummonerName = ign };
+                } else
+                {
+                    // Get match results (done asynchronously -> not blocking -> fast).
+                    var matchDataTasks = matchlist.Matches.Select(
+                           matchMetadata => _riotApi.MatchV4.GetMatchAsync(Region.NA, matchMetadata.GameId)
+                       ).ToArray();
+                    // Wait for all task requests to complete asynchronously.
+                    var matchDatas = await Task.WhenAll(matchDataTasks);
 
-                // Print #, win/loss, champion.
-                string firstLine = $"{i + 1}) {winOrLoss} ({champ.Name()})\n";
-                // Print champion, K/D/A
-                string secondLine = $"     K/D/A {k}/{d}/{a} {kda.ToString("F2")}\n";
+                    //StringBuilder sb = new StringBuilder($"Match history for {summonerData.Name}:\n");
 
-                sb.Append(firstLine);
-                sb.Append(secondLine);
+                    List<MatchStats> matchStatsList = new List<MatchStats>();
+
+                    for (var i = 0; i < matchDatas.Count(); i++)
+                    {
+                        var matchData = matchDatas[i];
+                        // Get this summoner's participant ID info.
+                        var participantIdData = matchData.ParticipantIdentities
+                            .First(pi => summonerData.Id.Equals(pi.Player.SummonerId));
+                        // Find the corresponding participant.
+                        var participant = matchData.Participants
+                            .First(p => p.ParticipantId == participantIdData.ParticipantId);
+
+                        var win = participant.Stats.Win;
+                        var champ = (Champion)participant.ChampionId;
+                        var k = participant.Stats.Kills;
+                        var d = participant.Stats.Deaths;
+                        var a = participant.Stats.Assists;
+                        var kda = (k + a) / (float)d;
+
+                        //string winOrLoss = win ? "Win" : "Loss";
+
+                        // Print #, win/loss, champion.
+                        //string firstLine = $"{i + 1}) {winOrLoss} ({champ.Name()})\n";
+                        // Print champion, K/D/A
+                        //string secondLine = $"     K/D/A {k}/{d}/{a} {kda.ToString("F2")}\n";
+
+                        MatchStats stats = new MatchStats
+                        {
+                            Champion = champ.Name(),
+                            Win = win,
+                            Kills = k,
+                            Deaths = d,
+                            Assists = a
+                        };
+
+                        matchStatsList.Add(stats);
+
+                        //sb.Append(firstLine);
+                        //sb.Append(secondLine);
+                    }
+
+                    return new MatchHistory
+                    {
+                        SummonerName = ign,
+                        Matches = matchStatsList
+                    };
+
+                    //return sb.ToString();
+                }
             }
+        }
 
-            return sb.ToString();
+        public static string CalculateKDA(int kills, int deaths, int assists)
+        {
+            var kda = (kills + assists) / (float)deaths;
+            return kda.ToString("F2");
         }
     }
 }
