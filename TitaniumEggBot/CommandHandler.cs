@@ -52,7 +52,10 @@ namespace TitaniumEggBot
             if (!(message.HasCharPrefix('!', ref argPos) ||
                 message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
                 message.Author.IsBot)
+            {
                 return;
+            }
+                
 
             // Create a WebSocket-based command context based on the message
             var context = new SocketCommandContext(_client, message);

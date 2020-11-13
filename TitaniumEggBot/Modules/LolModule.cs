@@ -45,7 +45,6 @@ namespace TitaniumEggBot.Modules
         [Summary("Prints performance of player in Ranked flex games.")]
         public async Task GetLolRankedFlexAsync([Remainder][Summary("Player in-game name")] string summonerName)
         {
-
             Embed embed = await CreateMatchHistoryEmbed(summonerName, 440, Context);
 
             await ReplyAsync(embed: embed);

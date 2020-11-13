@@ -82,13 +82,6 @@ namespace TitaniumEggBot
                         var a = participant.Stats.Assists;
                         var kda = (k + a) / (float)d;
 
-                        //string winOrLoss = win ? "Win" : "Loss";
-
-                        // Print #, win/loss, champion.
-                        //string firstLine = $"{i + 1}) {winOrLoss} ({champ.Name()})\n";
-                        // Print champion, K/D/A
-                        //string secondLine = $"     K/D/A {k}/{d}/{a} {kda.ToString("F2")}\n";
-
                         MatchStats stats = new MatchStats
                         {
                             Champion = champ.Name(),
@@ -99,9 +92,6 @@ namespace TitaniumEggBot
                         };
 
                         matchStatsList.Add(stats);
-
-                        //sb.Append(firstLine);
-                        //sb.Append(secondLine);
                     }
 
                     return new MatchHistory
@@ -109,8 +99,6 @@ namespace TitaniumEggBot
                         SummonerName = ign,
                         Matches = matchStatsList
                     };
-
-                    //return sb.ToString();
                 }
             }
         }

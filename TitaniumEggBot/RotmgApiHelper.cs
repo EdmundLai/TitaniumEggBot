@@ -69,7 +69,7 @@ namespace TitaniumEggBot
                 foreach (var charNode in playerCharacterNodes)
                 {
                     var charInfoRows = charNode.ChildNodes;
-                    //sb.Append($"{charNode.TextContent}\n");
+                    
                     string rotmgClassName = charInfoRows[2].TextContent;
                     string classLevel = charInfoRows[3].TextContent;
                     string fame = charInfoRows[5].TextContent;
