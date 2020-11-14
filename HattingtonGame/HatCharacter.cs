@@ -24,6 +24,12 @@ namespace HattingtonGame
         public int Experience { get; set; }
 
         [Required]
+        public int Health { get; set; }
+
+        [Required]
+        public int MaxHealth { get; set; }
+
+        [Required]
         public int Attack { get; set; }
 
         [Required]

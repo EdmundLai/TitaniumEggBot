@@ -25,6 +25,8 @@ CREATE TABLE "HatCharacters" (
     "HatID" INTEGER NOT NULL,
     "Level" INTEGER NOT NULL,
     "Experience" INTEGER NOT NULL,
+    "Health" INTEGER NOT NULL,
+    "MaxHealth" INTEGER NOT NULL,
     "Attack" INTEGER NOT NULL,
     "Defense" INTEGER NOT NULL,
     "Magic" INTEGER NOT NULL,
@@ -62,6 +64,6 @@ VALUES('Paper Bag', 1),
 ('Santa Hat', 4),
 ('Angel Halo', 4);
 
-INSERT INTO "HatCharacters" ("CharacterName", "HatID", "Level", "Experience", "Attack", "Defense", "Magic", "MagicDefense", "Stamina", "MaxStamina", "Fullness", "MaxFullness")
-VALUES('EggJunior', 2, 1, 0, 5, 5, 10, 5, 100, 100, 100, 100),
-('Delpathos', 7, 10, 0, 15, 15, 20, 15, 100, 100, 100, 100);
+INSERT INTO "HatCharacters" ("CharacterName", "HatID", "Level", "Experience", "Health", "MaxHealth", "Attack", "Defense", "Magic", "MagicDefense", "Stamina", "MaxStamina", "Fullness", "MaxFullness")
+VALUES('EggJunior', 2, 1, 0, 100, 100, 5, 5, 10, 5, 100, 100, 100, 100),
+('Delpathos', 7, 10, 0, 200, 200, 15, 15, 20, 15, 100, 100, 100, 100);

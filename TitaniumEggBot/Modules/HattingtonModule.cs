@@ -78,6 +78,7 @@ namespace TitaniumEggBot.Modules
                 {
                     string fieldDescription = $"Level: {character.Level}\n" +
                         $"Hat: {db.Hats.Find(character.HatID).HatName}\n" +
+                        $"Health: {character.Health}/{character.MaxHealth}\n" +
                         $"Attack: {character.Attack}\n" +
                         $"Defense: {character.Defense}\n" +
                         $"Magic: {character.Magic}\n" +
@@ -111,6 +112,17 @@ namespace TitaniumEggBot.Modules
             await ReplyAsync(successString);
         }
 
+        [Command("addhatchar")]
+        [Summary("Add character with provided name")]
+        public async Task AddTestCharacterAsync(string name)
+        {
+            bool success = await HattingtonGameEngine.AddNewCharacterAsync(name);
+
+            string successString = success ? "Character added successfully!" : "Character with that name already exists!";
+
+            await ReplyAsync(successString);
+        }
+
         // Small helper method to reduce redundant code
         private Embed CreateEmbed(string title, List<EmbedFieldBuilder> embedFields)
         {
@@ -126,14 +138,6 @@ namespace TitaniumEggBot.Modules
                 .Build();
 
             return embed;
-        }
-
-        // ~say hello world -> hello world
-        [Command("sayhi")]
-        [Summary("Echoes a message.")]
-        public Task SayHiAsync(string name)
-        {
-            return ReplyAsync($"hi {name}");
         }
         // ReplyAsync is a method on ModuleBase 
     }

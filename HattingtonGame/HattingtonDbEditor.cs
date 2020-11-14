@@ -8,12 +8,21 @@ namespace HattingtonGame
 {
     class HattingtonDbEditor
     {
-        public static async Task AddNewHatCharacter(HatCharacter character)
+        // need to add if character with character name already exists
+        public static async Task<bool> AddNewHatCharacter(HatCharacter character)
         {
             await using(var db = new Hattington())
             {
-                db.HatCharacters.Add(character);
-                await db.SaveChangesAsync();
+                var existingChar = db.HatCharacters.Where(c => c.CharacterName == character.CharacterName).FirstOrDefault();
+                if(existingChar is null)
+                {
+                    db.HatCharacters.Add(character);
+                    await db.SaveChangesAsync();
+                    return true;
+                }
+
+                return false;
+                
             }
         }
 
