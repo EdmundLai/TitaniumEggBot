@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace HattingtonGame
+namespace HattingtonGame.DbTypes
 {
-    public class HatTier
+    public class EnemyRank
     {
         [Key]
-        public int HatTierID { get; set; }
+        public int EnemyRankID { get; set; }
 
         [Required]
         public int MinLevel { get; set; }

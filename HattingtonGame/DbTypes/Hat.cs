@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace HattingtonGame
+namespace HattingtonGame.DbTypes
 {
     public class Hat
     {

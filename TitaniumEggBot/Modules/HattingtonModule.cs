@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using HattingtonGame.DbTypes;
 using HattingtonGame;
 using System.Linq;
 using Discord;
@@ -101,6 +102,41 @@ namespace TitaniumEggBot.Modules
             }
         }
 
+        [Command("getenemies")]
+        [Summary("Gets the hat enemies from the database.")]
+        public async Task GetHatEnemiesAsync()
+        {
+            using(var db = new Hattington())
+            {
+                var enemies = db.Enemies;
+
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                foreach(var enemy in enemies)
+                {
+                    string fieldDescription = $"Level: {enemy.Level}\n" +
+                        $"Max Health: {enemy.MaxHealth}\n" +
+                        $"Attack: {enemy.Attack}\n" +
+                        $"Defense: {enemy.Defense}\n" +
+                        $"Magic: {enemy.Magic}\n" +
+                        $"Magic Defense: {enemy.MagicDefense}";
+
+                    var embedField = new EmbedFieldBuilder
+                    {
+                        Name = enemy.Name,
+                        Value = fieldDescription
+
+                    };
+                    embedFields.Add(embedField);
+                }
+
+                var embed = CreateEmbed("Enemies", embedFields);
+
+                await ReplyAsync(embed: embed);
+
+            }
+        }
+
         [Command("addtesthat")]
         [Summary("Add test pufferfish hat.")]
         public async Task AddTestHatAsync()
@@ -114,14 +150,69 @@ namespace TitaniumEggBot.Modules
 
         [Command("addhatchar")]
         [Summary("Add character with provided name")]
-        public async Task AddTestCharacterAsync(string name)
+        public async Task AddTestCharacterAsync(string name = "")
         {
-            bool success = await HattingtonGameEngine.AddNewCharacterAsync(name);
 
-            string successString = success ? "Character added successfully!" : "Character with that name already exists!";
+            if(name.Length == 0)
+            {
+                await ReplyAsync("Please enter a name for your character.");
+            } else
+            {
+                bool success = await HattingtonGameEngine.AddNewCharacterAsync(name, Context.User.ToString());
 
-            await ReplyAsync(successString);
+                string successString = success ? "Character added successfully!" : "User already created a character!";
+
+                await ReplyAsync(successString);
+            }
         }
+
+        [Command("fight")]
+        [Summary("Fight a random enemy from the pool of enemies")]
+        public async Task FightEnemyAsync()
+        {
+            var log = await HattingtonGameEngine.FightEnemy(Context.User.ToString());
+
+            if (!log.IsValid)
+            {
+                await ReplyAsync(log.Error);
+            } else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                Console.WriteLine($"Number of events: {log.Events.Count}");
+
+                for(int i = 0; i < log.Events.Count; i++)
+                {
+                    var fight = log.Events[i];
+
+                    string description = log.PlayerFirst ? $"{fight.PlayerAction}\n{fight.EnemyAction}" : $"{fight.EnemyAction}\n{fight.PlayerAction}";
+
+                    var embedField = new EmbedFieldBuilder
+                    {
+                        Name = $"Round {i+1}",
+                        Value = description
+                    };
+                    embedFields.Add(embedField);
+                }
+
+                string battleResult = log.PlayerWin ? "Victory!" : "Defeat";
+
+                var embedBuilder = new EmbedBuilder
+                {
+                    Title = battleResult,
+                    Description = $"Battle between {log.CharacterName} and {log.EnemyName}",
+                    Fields = embedFields
+                };
+
+                Embed embed = embedBuilder
+                    .WithAuthor(Context.Client.CurrentUser)
+                    .WithCurrentTimestamp()
+                    .Build();
+
+                await ReplyAsync(embed: embed);
+            }
+        }
+            
 
         // Small helper method to reduce redundant code
         private Embed CreateEmbed(string title, List<EmbedFieldBuilder> embedFields)

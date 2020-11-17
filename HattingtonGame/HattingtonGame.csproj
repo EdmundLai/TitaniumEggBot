@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <None Update="Hattington.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

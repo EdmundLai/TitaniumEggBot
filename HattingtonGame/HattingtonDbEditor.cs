@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HattingtonGame.DbTypes;
+
 
 namespace HattingtonGame
 {
@@ -13,8 +15,8 @@ namespace HattingtonGame
         {
             await using(var db = new Hattington())
             {
-                var existingChar = db.HatCharacters.Where(c => c.CharacterName == character.CharacterName).FirstOrDefault();
-                if(existingChar is null)
+                //var existingChar = db.HatCharacters.Where(c => c.DiscordUser == character.DiscordUser).FirstOrDefault();
+                if(!UserHasExistingCharacter(character.DiscordUser))
                 {
                     db.HatCharacters.Add(character);
                     await db.SaveChangesAsync();
@@ -23,6 +25,19 @@ namespace HattingtonGame
 
                 return false;
                 
+            }
+        }
+
+        public static bool UserHasExistingCharacter(string discordUser)
+        { 
+            return GetUserCharacter(discordUser) != null;
+        }
+
+        public static HatCharacter GetUserCharacter(string discordUser)
+        {
+            using(var db = new Hattington())
+            {
+                return db.HatCharacters.Where(c => c.DiscordUser == discordUser).FirstOrDefault();
             }
         }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace HattingtonGame
+namespace HattingtonGame.DbTypes
 {
     public class HatCharacter
     {
@@ -13,6 +13,10 @@ namespace HattingtonGame
         [Required]
         [StringLength(20)]
         public string CharacterName { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string DiscordUser { get; set; }
 
         [Required]
         public int HatID { get; set; }
