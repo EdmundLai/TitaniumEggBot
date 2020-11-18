@@ -17,13 +17,13 @@ namespace TitaniumEggBot.Modules
         [Summary("Gets the hats in the database.")]
         public async Task GetHatsAsync()
         {
-            using(var db = new Hattington())
+            using (var db = new Hattington())
             {
                 IQueryable<Hat> hats = db.Hats;
 
                 List<EmbedFieldBuilder> embedFields = new List<EmbedFieldBuilder>();
 
-                foreach(Hat h in hats)
+                foreach (Hat h in hats)
                 {
                     EmbedFieldBuilder embedField = new EmbedFieldBuilder
                     {
@@ -43,13 +43,13 @@ namespace TitaniumEggBot.Modules
         [Summary("Gets the hat tiers from the database.")]
         public async Task GetHatTiersAsync()
         {
-            using(var db = new Hattington())
+            using (var db = new Hattington())
             {
                 IQueryable<HatTier> hatTiers = db.HatTiers;
 
                 List<EmbedFieldBuilder> embedFields = new List<EmbedFieldBuilder>();
 
-                foreach(HatTier hatTier in hatTiers)
+                foreach (HatTier hatTier in hatTiers)
                 {
                     var embedField = new EmbedFieldBuilder
                     {
@@ -65,32 +65,22 @@ namespace TitaniumEggBot.Modules
             }
         }
 
-        [Command("gethatchars")]
+        [Command("chars")]
         [Summary("Gets the hat characters from the database.")]
         public async Task GetHatCharactersAsync()
         {
-            using(var db = new Hattington())
+            using (var db = new Hattington())
             {
                 var characters = db.HatCharacters;
 
                 var embedFields = new List<EmbedFieldBuilder>();
 
-                foreach(var character in characters)
+                foreach (var character in characters)
                 {
-                    string fieldDescription = $"Level: {character.Level}\n" +
-                        $"Hat: {db.Hats.Find(character.HatID).HatName}\n" +
-                        $"Health: {character.Health}/{character.MaxHealth}\n" +
-                        $"Attack: {character.Attack}\n" +
-                        $"Defense: {character.Defense}\n" +
-                        $"Magic: {character.Magic}\n" +
-                        $"Magic Defense: {character.MagicDefense}\n" +
-                        $"Stamina: {character.Stamina}/{character.MaxStamina}\n" +
-                        $"Fullness: {character.Fullness}/{character.MaxFullness}";
-
                     var embedField = new EmbedFieldBuilder
                     {
                         Name = character.CharacterName,
-                        Value = fieldDescription
+                        Value = GenerateCharacterDescription(character)
                     };
 
                     embedFields.Add(embedField);
@@ -102,17 +92,38 @@ namespace TitaniumEggBot.Modules
             }
         }
 
-        [Command("getenemies")]
+        [Command("char")]
+        [Summary("Get player's character")]
+        public async Task GetCharacterAsync()
+        {
+            var character = HattingtonGameEngine.GetCharacter(Context.User.ToString());
+
+            var embedFields = new List<EmbedFieldBuilder>();
+
+            var embedField = new EmbedFieldBuilder
+            {
+                Name = character.CharacterName,
+                Value = GenerateCharacterDescription(character)
+            };
+
+            embedFields.Add(embedField);
+
+            Embed embed = CreateEmbed("Hat Character", embedFields);
+
+            await ReplyAsync(embed: embed);
+        }
+
+        [Command("enemies")]
         [Summary("Gets the hat enemies from the database.")]
         public async Task GetHatEnemiesAsync()
         {
-            using(var db = new Hattington())
+            using (var db = new Hattington())
             {
                 var enemies = db.Enemies;
 
                 var embedFields = new List<EmbedFieldBuilder>();
 
-                foreach(var enemy in enemies)
+                foreach (var enemy in enemies)
                 {
                     string fieldDescription = $"Level: {enemy.Level}\n" +
                         $"Max Health: {enemy.MaxHealth}\n" +
@@ -150,10 +161,10 @@ namespace TitaniumEggBot.Modules
 
         [Command("addhatchar")]
         [Summary("Add character with provided name")]
-        public async Task AddTestCharacterAsync(string name = "")
+        public async Task AddCharacterAsync(string name = "")
         {
 
-            if(name.Length == 0)
+            if (name.Length == 0)
             {
                 await ReplyAsync("Please enter a name for your character.");
             } else
@@ -179,28 +190,42 @@ namespace TitaniumEggBot.Modules
             {
                 var embedFields = new List<EmbedFieldBuilder>();
 
-                Console.WriteLine($"Number of events: {log.Events.Count}");
+                //Console.WriteLine($"Number of events: {log.Events.Count}");
 
-                for(int i = 0; i < log.Events.Count; i++)
+                // may have to do a summary instead of each round
+                // due to the amount of fields in the case of fights that take many rounds
+                //for(int i = 0; i < log.Events.Count; i++)
+                //{
+                //    var fight = log.Events[i];
+
+                //    string description = log.PlayerFirst ? $"{fight.PlayerAction}\n{fight.EnemyAction}" : $"{fight.EnemyAction}\n{fight.PlayerAction}";
+
+                //    var embedField = new EmbedFieldBuilder
+                //    {
+                //        Name = $"Round {i+1}",
+                //        Value = description
+                //    };
+
+                //    embedFields.Add(embedField);
+                //}
+
+                string lastStatement = log.PlayerWin ? $"{log.CharacterName} was victorious over a {log.EnemyName}!" : $"{log.CharacterName} was defeated by a {log.EnemyName}.";
+
+                var concludingField = new EmbedFieldBuilder
                 {
-                    var fight = log.Events[i];
+                    Name = lastStatement,
+                    Value = $"{log.DamageTakenByPlayer} damage taken by {log.CharacterName}\n" +
+                    $"{log.DamageTakenByEnemy} damage taken by {log.EnemyName}\n" +
+                    $"{log.ExpGained} Exp Gained."
+                };
 
-                    string description = log.PlayerFirst ? $"{fight.PlayerAction}\n{fight.EnemyAction}" : $"{fight.EnemyAction}\n{fight.PlayerAction}";
-
-                    var embedField = new EmbedFieldBuilder
-                    {
-                        Name = $"Round {i+1}",
-                        Value = description
-                    };
-                    embedFields.Add(embedField);
-                }
+                embedFields.Add(concludingField);
 
                 string battleResult = log.PlayerWin ? "Victory!" : "Defeat";
 
                 var embedBuilder = new EmbedBuilder
                 {
                     Title = battleResult,
-                    Description = $"Battle between {log.CharacterName} and {log.EnemyName}",
                     Fields = embedFields
                 };
 
@@ -212,7 +237,81 @@ namespace TitaniumEggBot.Modules
                 await ReplyAsync(embed: embed);
             }
         }
-            
+
+        [Command("rest")]
+        [Summary("Allows character to rest and regain stamina; reduces fullness by 8% of max fullness")]
+        public async Task RestCharacterAsync()
+        {
+            var log = await HattingtonGameEngine.Rest(Context.User.ToString());
+
+            if (!log.IsValid)
+            {
+                await ReplyAsync(log.Error);
+            } else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                var mainField = new EmbedFieldBuilder
+                {
+                    Name = "Details",
+                    Value = $"+{log.StaminaGained} stamina\n" +
+                    $"-{log.FullnessCost} fullness"
+                };
+
+                embedFields.Add(mainField);
+
+                var embed = CreateEmbed($"{log.CharacterName} is now rested!", embedFields);
+
+                await ReplyAsync(embed: embed);
+            }
+        }
+
+        [Command("heal")]
+        [Summary("Allows character to heal 50% of max hp; costs 30 stamina")]
+        public async Task HealCharacterAsync()
+        {
+            var log = await HattingtonGameEngine.Heal(Context.User.ToString());
+
+            if (!log.IsValid)
+            {
+                await ReplyAsync(log.Error);
+            }
+            else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                var mainField = new EmbedFieldBuilder
+                {
+                    Name = "Details",
+                    Value = $"+{log.HealthGained} health\n" +
+                    $"-{log.StaminaCost} stamina"
+                };
+
+                embedFields.Add(mainField);
+
+                var embed = CreateEmbed($"{log.CharacterName} has regained health!", embedFields);
+
+                await ReplyAsync(embed: embed);
+            }
+        }
+
+        // need to create module function for !eat to regain fullness
+
+
+        // helper method for creating hat character embed
+        public static string GenerateCharacterDescription(HatCharacter character)
+        {
+            return $"Level: {character.Level}\n" +
+                        $"Experience: {character.Experience}\n" +
+                        $"Hat: {HattingtonGameEngine.GetHatName(character.HatID)}\n" +
+                        $"Health: {character.Health}/{character.MaxHealth}\n" +
+                        $"Attack: {character.Attack}\n" +
+                        $"Defense: {character.Defense}\n" +
+                        $"Magic: {character.Magic}\n" +
+                        $"Magic Defense: {character.MagicDefense}\n" +
+                        $"Stamina: {character.Stamina}/{character.MaxStamina}\n" +
+                        $"Fullness: {character.Fullness}/{character.MaxFullness}";
+        }
 
         // Small helper method to reduce redundant code
         private Embed CreateEmbed(string title, List<EmbedFieldBuilder> embedFields)

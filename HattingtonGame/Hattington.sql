@@ -59,6 +59,7 @@ CREATE TABLE "Enemies" (
     "MagicDefense" INTEGER NOT NULL,
     "NormalAttackChances" INTEGER NOT NULL,
     "MagicAttackChances" INTEGER NOT NULL,
+    "ExpGain" INTEGER NOT NULL,
     CONSTRAINT "FK_Enemies_EnemyRanks" FOREIGN KEY(
         "EnemyRankID"
     ) REFERENCES "EnemyRanks"(
@@ -103,15 +104,15 @@ VALUES('Paper Bag', 1),
 ('Santa Hat', 4),
 ('Angel Halo', 4);
 
-INSERT INTO "Enemies" ("Name", "EnemyRankID", "Level", "MaxHealth", "Attack", "Defense", "Magic", "MagicDefense", "NormalAttackChances", "MagicAttackChances")
-VALUES('Blue Slime', 1, 1, 20, 3, 3, 3, 5, 1, 0),
-('Little Goblin', 1, 1, 22, 4, 3, 2, 1, 1, 1),
-('Green Slime', 1, 2, 30, 5, 5, 3, 5, 1, 0),
-('Red Slime', 1,  4, 40, 7, 7, 4, 6, 1, 1),
-('Infected Slime', 2, 9, 80, 7, 7, 12, 6, 1, 4),
-('Cursed Tome', 3, 16, 100, 13, 10, 16, 8, 1, 7),
-('Werewolf', 4, 25, 150, 25, 20, 15, 25, 8, 1),
-('Unholy Paladin', 5, 36, 225, 40, 30, 25, 35, 5, 2),
-('Elven Arch Mage', 6, 44, 200, 50, 40, 80, 35, 1, 3),
-('Golden Wyvern', 7, 51, 370, 80, 70, 65, 55, 2, 1),
-('Nightmare Dragon', 8, 60, 500, 150, 100, 125, 75, 1, 1);
+INSERT INTO "Enemies" ("Name", "EnemyRankID", "Level", "MaxHealth", "Attack", "Defense", "Magic", "MagicDefense", "NormalAttackChances", "MagicAttackChances", "ExpGain")
+VALUES('Blue Slime', 1, 1, 20, 7, 6, 9, 5, 1, 2, 5),
+('Little Goblin', 1, 1, 22, 9, 6, 5, 5, 1, 1, 6),
+('Green Slime', 1, 2, 30, 13, 10, 9, 7, 1, 1, 13),
+('Red Slime', 1,  4, 40, 16, 11, 12, 10, 1, 1, 25),
+('Infected Slime', 2, 9, 80, 20, 18, 17, 14, 1, 4, 35),
+('Cursed Tome', 3, 16, 100, 27, 22, 30, 19, 1, 7, 50),
+('Werewolf', 4, 25, 150, 46, 40, 33, 30, 8, 1, 70),
+('Unholy Paladin', 5, 36, 225, 60, 59, 48, 45, 5, 2, 100),
+('Elven Arch Mage', 6, 44, 200, 70, 60, 100, 95, 1, 3, 135),
+('Golden Wyvern', 7, 51, 370, 110, 90, 115, 95, 2, 1, 180),
+('Nightmare Dragon', 8, 60, 500, 200, 150, 175, 175, 1, 1, 400);

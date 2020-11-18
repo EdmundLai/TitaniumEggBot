@@ -16,7 +16,7 @@ namespace HattingtonGame
             await using(var db = new Hattington())
             {
                 //var existingChar = db.HatCharacters.Where(c => c.DiscordUser == character.DiscordUser).FirstOrDefault();
-                if(!UserHasExistingCharacter(character.DiscordUser))
+                if(!UserHasExistingCharacter(character.DiscordUser, db))
                 {
                     db.HatCharacters.Add(character);
                     await db.SaveChangesAsync();
@@ -28,16 +28,29 @@ namespace HattingtonGame
             }
         }
 
-        public static bool UserHasExistingCharacter(string discordUser)
+        public static bool UserHasExistingCharacter(string discordUser, Hattington db)
         { 
-            return GetUserCharacter(discordUser) != null;
+            return GetUserCharacter(discordUser, db) != null;
         }
 
-        public static HatCharacter GetUserCharacter(string discordUser)
+        public static HatCharacter GetUserCharacter(string discordUser, Hattington db)
+        {
+            return db.HatCharacters.Where(c => c.DiscordUser == discordUser).FirstOrDefault();
+        }
+
+        public static string GetHatNameFromId(int id)
         {
             using(var db = new Hattington())
             {
-                return db.HatCharacters.Where(c => c.DiscordUser == discordUser).FirstOrDefault();
+                return db.Hats.Find(id).HatName;
+            }
+        }
+
+        public static List<HatCharacter> GetCharacters()
+        {
+            using(var db = new Hattington())
+            {
+                return db.HatCharacters.ToList();
             }
         }
 

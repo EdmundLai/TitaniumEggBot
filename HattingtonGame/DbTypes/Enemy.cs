@@ -40,5 +40,8 @@ namespace HattingtonGame.DbTypes
 
         [Required]
         public int MagicAttackChances { get; set; }
+
+        [Required]
+        public int ExpGain { get; set; }
     }
 }
