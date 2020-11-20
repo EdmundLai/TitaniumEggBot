@@ -204,14 +204,6 @@ namespace HattingtonGame
 
         // DO THIRD
         // Get user's food in from inventory
-        // HattingtonModule will return an embed with this structure
-        // Title: Food
-        // Field1:
-        //   Name: Hunted Items
-        //   Value: {food name} {fullness restored}\n
-        // Field2:
-        //   Name: Foraged Items
-        //   Value: {food name} {fullness restored}\n
         public static InventoryLog GetFoodInventory(string discordUser)
         {
             using(var db = new Hattington())
@@ -236,7 +228,7 @@ namespace HattingtonGame
                         Error = "Player has no food items! Get more by using !forage or !hunt"
                     };
                 }
-                Console.WriteLine($"fooditemsstring: {playerInventory.FoodItemsString}");
+                //Console.WriteLine($"fooditemsstring: {playerInventory.FoodItemsString}");
 
                 var foodItems = playerInventory.FoodItemsString.Split(",").ToList();
 
@@ -244,7 +236,7 @@ namespace HattingtonGame
 
                 foreach(string foodID in foodItems)
                 {
-                    Console.WriteLine(foodID);
+                    //Console.WriteLine(foodID);
                     int foodIntID = int.Parse(foodID);
 
                     if (!foodItemsDict.ContainsKey(foodIntID))
