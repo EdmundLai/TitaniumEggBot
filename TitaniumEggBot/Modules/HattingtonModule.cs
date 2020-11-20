@@ -12,7 +12,6 @@ namespace TitaniumEggBot.Modules
 {
     public class HattingtonModule : ModuleBase<SocketCommandContext>
     {
-        // ~say hello world -> hello world
         [Command("gethats")]
         [Summary("Gets the hats in the database.")]
         public async Task GetHatsAsync()
@@ -33,7 +32,7 @@ namespace TitaniumEggBot.Modules
                     embedFields.Add(embedField);
                 }
 
-                Embed embed = CreateEmbed("Hat", embedFields);
+                Embed embed = HattingtonUtilities.CreateEmbed("Hat", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
@@ -59,7 +58,7 @@ namespace TitaniumEggBot.Modules
                     embedFields.Add(embedField);
                 }
 
-                Embed embed = CreateEmbed("Hat Tiers", embedFields);
+                Embed embed = HattingtonUtilities.CreateEmbed("Hat Tiers", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
@@ -80,13 +79,13 @@ namespace TitaniumEggBot.Modules
                     var embedField = new EmbedFieldBuilder
                     {
                         Name = character.CharacterName,
-                        Value = GenerateCharacterDescription(character)
+                        Value = HattingtonUtilities.GenerateCharacterDescription(character)
                     };
 
                     embedFields.Add(embedField);
                 }
 
-                Embed embed = CreateEmbed("Hat Characters", embedFields);
+                Embed embed = HattingtonUtilities.CreateEmbed("Hat Characters", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
@@ -98,17 +97,23 @@ namespace TitaniumEggBot.Modules
         {
             var character = HattingtonGameEngine.GetCharacter(Context.User.ToString());
 
+            if (character == null)
+            {
+                await ReplyAsync("Character not found! Please add a new character using !addchar CharacterName");
+                return;
+            }
+
             var embedFields = new List<EmbedFieldBuilder>();
 
             var embedField = new EmbedFieldBuilder
             {
                 Name = character.CharacterName,
-                Value = GenerateCharacterDescription(character)
+                Value = HattingtonUtilities.GenerateCharacterDescription(character)
             };
 
             embedFields.Add(embedField);
 
-            Embed embed = CreateEmbed("Hat Character", embedFields);
+            Embed embed = HattingtonUtilities.CreateEmbed("Hat Character", embedFields, Context);
 
             await ReplyAsync(embed: embed);
         }
@@ -141,25 +146,14 @@ namespace TitaniumEggBot.Modules
                     embedFields.Add(embedField);
                 }
 
-                var embed = CreateEmbed("Enemies", embedFields);
+                var embed = HattingtonUtilities.CreateEmbed("Enemies", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
 
             }
         }
 
-        [Command("addtesthat")]
-        [Summary("Add test pufferfish hat.")]
-        public async Task AddTestHatAsync()
-        {
-            bool success = await HattingtonGameEngine.TestAddHatAsync();
-
-            string successString = success ? "Hat added successfully!" : "Hat already exists!";
-
-            await ReplyAsync(successString);
-        }
-
-        [Command("addhatchar")]
+        [Command("addchar")]
         [Summary("Add character with provided name")]
         public async Task AddCharacterAsync(string name = "")
         {
@@ -189,25 +183,6 @@ namespace TitaniumEggBot.Modules
             } else
             {
                 var embedFields = new List<EmbedFieldBuilder>();
-
-                //Console.WriteLine($"Number of events: {log.Events.Count}");
-
-                // may have to do a summary instead of each round
-                // due to the amount of fields in the case of fights that take many rounds
-                //for(int i = 0; i < log.Events.Count; i++)
-                //{
-                //    var fight = log.Events[i];
-
-                //    string description = log.PlayerFirst ? $"{fight.PlayerAction}\n{fight.EnemyAction}" : $"{fight.EnemyAction}\n{fight.PlayerAction}";
-
-                //    var embedField = new EmbedFieldBuilder
-                //    {
-                //        Name = $"Round {i+1}",
-                //        Value = description
-                //    };
-
-                //    embedFields.Add(embedField);
-                //}
 
                 string lastStatement = log.PlayerWin ? $"{log.CharacterName} was victorious over a {log.EnemyName}!" : $"{log.CharacterName} was defeated by a {log.EnemyName}.";
 
@@ -260,7 +235,7 @@ namespace TitaniumEggBot.Modules
 
                 embedFields.Add(mainField);
 
-                var embed = CreateEmbed($"{log.CharacterName} is now rested!", embedFields);
+                var embed = HattingtonUtilities.CreateEmbed($"{log.CharacterName} is now rested!", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
@@ -289,46 +264,102 @@ namespace TitaniumEggBot.Modules
 
                 embedFields.Add(mainField);
 
-                var embed = CreateEmbed($"{log.CharacterName} has regained health!", embedFields);
+                var embed = HattingtonUtilities.CreateEmbed($"{log.CharacterName} has regained health!", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
         }
 
+        [Command("forage")]
+        [Summary("Forage for food to restore fullness, has 0 stamina cost")]
+        public async Task ForageFoodAsync()
+        {
+            var forageLog = await HattingtonGameEngine.Forage(Context.User.ToString());
+
+            if (!forageLog.IsValid)
+            {
+                await ReplyAsync(forageLog.Error);
+            } else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                var mainField = new EmbedFieldBuilder
+                {
+                    Name = $"{forageLog.FoodName} found!",
+                    Value = $"{forageLog.FoodCategory} Item\n" +
+                    $"Restores {forageLog.Energy} fullness"
+                };
+
+                embedFields.Add(mainField);
+
+                var embed = HattingtonUtilities.CreateEmbed("Foraging Results", embedFields, Context);
+
+                await ReplyAsync(embed: embed);
+            }
+        }
+
+        [Command("hunt")]
+        [Summary("Hunt for food to restore fullness, has 5 stamina cost")]
+        public async Task HuntFoodAsync()
+        {
+            var huntLog = await HattingtonGameEngine.Hunt(Context.User.ToString());
+
+            if (!huntLog.IsValid)
+            {
+                await ReplyAsync(huntLog.Error);
+            }
+            else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                var mainField = new EmbedFieldBuilder
+                {
+                    Name = $"{huntLog.FoodName} found!",
+                    Value = $"{huntLog.FoodCategory} Item\n" +
+                    $"Restores {huntLog.Energy} fullness"
+                };
+
+                embedFields.Add(mainField);
+
+                var embed = HattingtonUtilities.CreateEmbed("Hunting Results", embedFields, Context);
+
+                await ReplyAsync(embed: embed);
+            }
+        }
+
+        [Command("inv")]
+        [Summary("Get all food items from inventory")]
+        public async Task GetInventoryAsync()
+        {
+            var inventoryLog = HattingtonGameEngine.GetInventory(Context.User.ToString());
+
+            if (!inventoryLog.IsValid)
+            {
+                await ReplyAsync(inventoryLog.Error);
+            } else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                foreach(FoodItem food in inventoryLog.Items)
+                {
+                    var embedField = new EmbedFieldBuilder
+                    {
+                        Name = $"{food.Food.Name} x {food.Quantity}",
+                        Value = $"{food.Food.Energy} fullness restored"
+                    };
+
+                    embedFields.Add(embedField);
+                }
+
+                var embed = HattingtonUtilities.CreateEmbed("Inventory", embedFields, Context);
+
+                await ReplyAsync(embed: embed);
+            }
+
+        }
+
         // need to create module function for !eat to regain fullness
 
-
-        // helper method for creating hat character embed
-        public static string GenerateCharacterDescription(HatCharacter character)
-        {
-            return $"Level: {character.Level}\n" +
-                        $"Experience: {character.Experience}\n" +
-                        $"Hat: {HattingtonGameEngine.GetHatName(character.HatID)}\n" +
-                        $"Health: {character.Health}/{character.MaxHealth}\n" +
-                        $"Attack: {character.Attack}\n" +
-                        $"Defense: {character.Defense}\n" +
-                        $"Magic: {character.Magic}\n" +
-                        $"Magic Defense: {character.MagicDefense}\n" +
-                        $"Stamina: {character.Stamina}/{character.MaxStamina}\n" +
-                        $"Fullness: {character.Fullness}/{character.MaxFullness}";
-        }
-
-        // Small helper method to reduce redundant code
-        private Embed CreateEmbed(string title, List<EmbedFieldBuilder> embedFields)
-        {
-            var embedBuilder = new EmbedBuilder
-            {
-                Title = title,
-                Fields = embedFields
-            };
-
-            Embed embed = embedBuilder
-                .WithAuthor(Context.Client.CurrentUser)
-                .WithCurrentTimestamp()
-                .Build();
-
-            return embed;
-        }
         // ReplyAsync is a method on ModuleBase 
     }
 }

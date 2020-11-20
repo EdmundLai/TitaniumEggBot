@@ -13,6 +13,9 @@ namespace HattingtonGame
         public DbSet<HatTier> HatTiers { get; set; }
         public DbSet<Enemy> Enemies { get; set; }
         public DbSet<EnemyRank> EnemyRanks { get; set; }
+        public DbSet<Food> FoodItems { get; set; }
+        public DbSet<Inventory> CharacterInventories { get; set; }
+        public DbSet<ItemType> ItemTypes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

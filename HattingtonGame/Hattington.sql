@@ -3,7 +3,9 @@ DROP TABLE IF EXISTS "Hats";
 DROP TABLE IF EXISTS "HatTiers";
 DROP TABLE IF EXISTS "Enemies";
 DROP TABLE IF EXISTS "EnemyRanks";
-
+DROP TABLE IF EXISTS "FoodItems";
+DROP TABLE IF EXISTS "ItemTypes";
+DROP TABLE IF EXISTS "CharacterInventories";
 
 CREATE TABLE "HatTiers" (
     "HatTierID" INTEGER PRIMARY KEY,
@@ -73,6 +75,30 @@ CREATE TABLE "EnemyRanks" (
     "MaxLevel" INTEGER NOT NULL
 );
 
+CREATE TABLE "CharacterInventories" (
+    "InventoryID" INTEGER PRIMARY KEY,
+    "DiscordUser" nvarchar(50) NOT NULL,
+    "FoodItemsString" nvarchar(200) NOT NULL
+);
+
+CREATE TABLE "ItemTypes" (
+    "ItemTypeID" INTEGER PRIMARY KEY,
+    "TypeName" nvarchar(20) NOT NULL
+);
+
+CREATE TABLE "FoodItems" (
+    "ItemID" INTEGER PRIMARY KEY,
+    "Name" nvarchar(20) NOT NULL,
+    "ItemTypeID" INTEGER NOT NULL,
+    "Energy" INTEGER NOT NULL,
+    "AppearanceChance" INTEGER NOT NULL,
+    CONSTRAINT "FK_FoodItems_ItemTypes" FOREIGN KEY(
+        "ItemTypeID"
+    ) REFERENCES "ItemTypes"(
+        "ItemTypeID"
+    )
+);
+
 INSERT INTO "HatTiers" ("MinLevel", "MaxLevel")
 VALUES(1, 9),
 (10, 29),
@@ -116,3 +142,25 @@ VALUES('Blue Slime', 1, 1, 20, 7, 6, 9, 5, 1, 2, 5),
 ('Elven Arch Mage', 6, 44, 200, 70, 60, 100, 95, 1, 3, 135),
 ('Golden Wyvern', 7, 51, 370, 110, 90, 115, 95, 2, 1, 180),
 ('Nightmare Dragon', 8, 60, 500, 200, 150, 175, 175, 1, 1, 400);
+
+INSERT INTO "ItemTypes" ("TypeName")
+VALUES('Foraged'),
+('Hunted');
+
+INSERT INTO "FoodItems" ("Name", "ItemTypeID", "Energy", "AppearanceChance")
+VALUES('Banana', 1, 3, 50),
+('Potato', 1, 2, 50),
+('Blueberry', 1, 5, 50),
+('Apple', 1, 3, 70),
+('Raspberry', 1, 5, 50),
+('Peach', 1, 6, 40),
+('Pineapple', 1, 15, 10),
+('Dragonfruit', 1, 20, 10),
+('Dreamerfruit', 1, 200, 2),
+('Rat', 2, 10, 60),
+('Fox', 2, 20, 50),
+('Rabbit', 2, 20, 50),
+('Deer', 2, 40, 20),
+('Bison', 2, 80, 10),
+('Rhino', 2, 170, 5),
+('Tiger', 2, 250, 3);
