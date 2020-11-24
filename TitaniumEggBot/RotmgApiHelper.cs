@@ -54,7 +54,9 @@ namespace TitaniumEggBot
             string playerName = document.QuerySelector(".entity-name").TextContent;
             string rank = document.QuerySelector(".star-container").TextContent;
 
-            var tableBody = document.QuerySelector("#e tbody");
+            var tableBody = document.QuerySelector("#f tbody");
+
+            //Console.WriteLine(tableBody.TextContent);
 
             // If TextContent doesn't end with a /8 it isn't valid
             if (!tableBody.TextContent.EndsWith("/8"))
@@ -71,10 +73,12 @@ namespace TitaniumEggBot
                     var charInfoRows = charNode.ChildNodes;
                     
                     string rotmgClassName = charInfoRows[2].TextContent;
+                    
                     string classLevel = charInfoRows[3].TextContent;
+                    
                     string fame = charInfoRows[5].TextContent;
                     string rankedPlace = charInfoRows[7].TextContent;
-                    
+
                     var charItems = charInfoRows[8].ChildNodes;
                     string stats = charInfoRows[9].TextContent;
 
@@ -85,7 +89,12 @@ namespace TitaniumEggBot
                         var itemNode = charItems[i];
                         var itemInfo = (IElement)itemNode.FirstChild.FirstChild;
 
-                        string itemName = itemInfo.GetAttribute("title");
+                        string itemName = "No item";
+
+                        if (itemInfo != null)
+                        {
+                            itemName = itemInfo.GetAttribute("title");
+                        }
 
                         switch(i)
                         {

@@ -23,7 +23,8 @@ namespace TitaniumEggBot.Modules
             await ReplyAsync(successString);
         }
 
-        [Command("getrandomhat")]
+        [Command("getfirsthat")]
+        [Summary("Gets the first hat from database of all hats")]
         public async Task GetSomeHat()
         {
             var hat = HattingtonGameEngine.GetFirstHat();

@@ -116,6 +116,11 @@ namespace HattingtonGame
             return await HattingtonFoodHandler.Hunt(discordUser);
         }
 
+        public static async Task<EatLog> Eat(string discordUser)
+        {
+            return await HattingtonFoodHandler.Eat(discordUser);
+        }
+
         public static InventoryLog GetInventory(string discordUser)
         {
             return HattingtonFoodHandler.GetFoodInventory(discordUser);

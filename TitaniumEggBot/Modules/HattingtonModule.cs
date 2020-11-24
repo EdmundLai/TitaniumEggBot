@@ -359,6 +359,36 @@ namespace TitaniumEggBot.Modules
         }
 
         // need to create module function for !eat to regain fullness
+        [Command("eat")]
+        [Summary("Eat lowest energy food to restore fullness")]
+        public async Task EatFoodAsync()
+        {
+            var eatLog = await HattingtonGameEngine.Eat(Context.User.ToString());
+
+            if (!eatLog.IsValid)
+            {
+                await ReplyAsync(eatLog.Error);
+            } else
+            {
+                var embedFields = new List<EmbedFieldBuilder>();
+
+                string maxFullnessLine = eatLog.AtMaxFullness ? $"{eatLog.CharacterName} is now completely full." : "";
+
+                var mainField = new EmbedFieldBuilder
+                {
+                    Name = $"{eatLog.CharacterName} ate a {eatLog.FoodName}!",
+                    Value = $"{eatLog.CharacterName} now has {eatLog.CurrentFullness} fullness.\n" +
+                    $"{maxFullnessLine}"
+                };
+
+                embedFields.Add(mainField);
+
+                var embed = HattingtonUtilities.CreateEmbed("Meal time!", embedFields, Context);
+
+                await ReplyAsync(embed: embed);
+            }
+        }
+
 
         // ReplyAsync is a method on ModuleBase 
     }

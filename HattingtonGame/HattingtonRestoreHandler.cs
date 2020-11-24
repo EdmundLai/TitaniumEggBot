@@ -40,6 +40,15 @@ namespace HattingtonGame
                     };
                 }
 
+                if(character.Stamina == character.MaxStamina)
+                {
+                    return new RestLog
+                    {
+                        IsValid = false,
+                        Error = "Character already has max stamina!",
+                    };
+                }
+
                 int originalStamina = character.Stamina;
                 int originalFullness = character.Fullness;
 
@@ -88,6 +97,15 @@ namespace HattingtonGame
                     {
                         IsValid = false,
                         Error = "Not enough stamina! Use !rest to regain stamina."
+                    };
+                }
+
+                if(character.Health == character.MaxHealth)
+                {
+                    return new HealLog
+                    {
+                        IsValid = false,
+                        Error = "Character health is already at max."
                     };
                 }
 

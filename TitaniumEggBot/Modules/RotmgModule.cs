@@ -60,6 +60,7 @@ namespace TitaniumEggBot.Modules
 
         // template for using embeds
         [Command("embed")]
+        [Summary("command used for testing out how embeds work")]
         public async Task SendRichEmbedAsync()
         {
             var field0 = new EmbedFieldBuilder

@@ -28,14 +28,21 @@ namespace HattingtonGame
         // TODO: Test this in HattingtonModule
         public static async Task<HuntForageLog> Hunt(string discordUser)
         {
-            int staminaCost = 5;
+            return await GatherFood(discordUser, 2);
+        }
 
-            await using(var db = new Hattington())
+        // called by either Hunt or Forage (foodTypeID = 1 for forage, foodTypeID = 2 for hunt)
+        public static async Task<HuntForageLog> GatherFood(string discordUser, int foodTypeID)
+        {
+            await using (var db = new Hattington())
             {
                 var character = HattingtonDbEditor.GetUserCharacter(discordUser, db);
 
+                int huntTypeID = 2;
+
                 if (character == null)
                 {
+                    // do something
                     return new HuntForageLog
                     {
                         IsValid = false,
@@ -43,36 +50,29 @@ namespace HattingtonGame
                     };
                 }
 
-                if(character.Stamina < staminaCost)
+                if (character.Health == 0)
                 {
                     return new HuntForageLog
                     {
                         IsValid = false,
-                        Error = "Character does not have enough stamina! Recharage your stamina using !rest"
+                        Error = "Character cannot gather food on 0 health! Restore your health using !heal"
                     };
                 }
-            }
 
-            await HattingtonDbEditor.DeductFromCharacterStamina(discordUser, staminaCost);
+                int staminaCost = 5;
 
-            return await GatherFood(discordUser, 2);
-        }
-
-        // called by either Hunt or Forage (foodTypeID = 1 for forage, foodTypeID = 2 for hunt)
-        public static async Task<HuntForageLog> GatherFood(string discordUser, int foodTypeID)
-        {
-            if (!HattingtonDbEditor.UserHasExistingCharacter(discordUser))
-            {
-                // do something
-                return new HuntForageLog
+                if (foodTypeID == huntTypeID)
                 {
-                    IsValid = false,
-                    Error = "Character does not exist! Create a character using !addchar characterName"
-                };
-            }
-
-            await using (var db = new Hattington())
-            {
+                    if (character.Stamina < staminaCost)
+                    {
+                        return new HuntForageLog
+                        {
+                            IsValid = false,
+                            Error = "Character does not have enough stamina! Recharage your stamina using !rest"
+                        };
+                    }
+                }
+            
                 var randomFood = GetRandomFoodFromTable(db.FoodItems, foodTypeID);
 
                 var playerInventory = HattingtonDbEditor.GetPlayerInventory(discordUser, db);
@@ -88,13 +88,18 @@ namespace HattingtonGame
                     };
                 }
 
-                playerInventory.FoodItemsString = GetNewFoodItemsString(playerInventory, randomFood);
+                playerInventory.FoodItemsString = GetNewFoodItemsStringAfterAdd(playerInventory, randomFood);
 
                 await db.SaveChangesAsync();
 
-                string characterName = HattingtonDbEditor.GetUserCharacter(discordUser, db).CharacterName;
+                string characterName = character.CharacterName;
 
                 string foodCategory = HattingtonDbEditor.GetFoodCategory(randomFood.ItemTypeID, db);
+
+                if(foodTypeID == huntTypeID)
+                {
+                    await HattingtonDbEditor.DeductFromCharacterStamina(discordUser, staminaCost);
+                }
 
                 return new HuntForageLog
                 {
@@ -107,7 +112,7 @@ namespace HattingtonGame
             }
         }
 
-        static string GetNewFoodItemsString(Inventory inventory, Food food)
+        static string GetNewFoodItemsStringAfterAdd(Inventory inventory, Food food)
         {
             var foodItems = new List<string>();
 
@@ -118,6 +123,21 @@ namespace HattingtonGame
             }
 
             foodItems.Add(food.ItemID.ToString());
+
+            return string.Join(",", foodItems);
+        }
+
+        static string GetNewFoodItemsStringAfterRemove(Inventory inventory, Food food)
+        {
+            var foodItems = new List<string>();
+
+            // string split works only if there are items in the list already, not an empty list
+            if (inventory.FoodItemsString.Length > 0)
+            {
+                foodItems = inventory.FoodItemsString.Split(",").ToList();
+            }
+
+            foodItems.Remove(food.ItemID.ToString());
 
             return string.Join(",", foodItems);
         }
@@ -208,9 +228,9 @@ namespace HattingtonGame
         {
             using(var db = new Hattington())
             {
-                Inventory playerInventory = HattingtonDbEditor.GetPlayerInventory(discordUser, db);
+                var foodItems = GetFoodItemsFromInventory(discordUser, db);
 
-                if(playerInventory == null)
+                if(foodItems == null)
                 {
                     return new InventoryLog
                     {
@@ -220,7 +240,7 @@ namespace HattingtonGame
                 }
 
                 // handle case of empty string
-                if(playerInventory.FoodItemsString.Length == 0)
+                if(foodItems.Count == 0)
                 {
                     return new InventoryLog
                     {
@@ -228,55 +248,157 @@ namespace HattingtonGame
                         Error = "Player has no food items! Get more by using !forage or !hunt"
                     };
                 }
-                //Console.WriteLine($"fooditemsstring: {playerInventory.FoodItemsString}");
-
-                var foodItems = playerInventory.FoodItemsString.Split(",").ToList();
-
-                Dictionary<int, int> foodItemsDict = new Dictionary<int, int>();
-
-                foreach(string foodID in foodItems)
-                {
-                    //Console.WriteLine(foodID);
-                    int foodIntID = int.Parse(foodID);
-
-                    if (!foodItemsDict.ContainsKey(foodIntID))
-                    {
-                        foodItemsDict.Add(foodIntID, 1);
-                    } else
-                    {
-                        foodItemsDict[foodIntID] += 1;
-                    }
-                }
-
-                var foodList = new List<FoodItem>();
-
-                foreach(var foodItemKVP in foodItemsDict)
-                {
-                    var item = new FoodItem
-                    {
-                        Food = HattingtonDbEditor.GetFoodFromId(foodItemKVP.Key, db),
-                        Quantity = foodItemKVP.Value
-                    };
-                    foodList.Add(item);
-                }
 
                 return new InventoryLog
                 {
                     IsValid = true,
                     CharacterName = HattingtonDbEditor.GetUserCharacterName(discordUser, db),
-                    Items = foodList
+                    Items = foodItems
 
                 };
             }
         }
 
-        // DO LAST
-        // let user choose what food to eat (hard to implement)
-        // need to get food names and fullness values using command !food
-        // if no food is provided as a parameter, tell user to provide a food
-        public static async Task Eat(string discordUser, string food = "")
+        
+        public static List<FoodItem> GetFoodItemsFromInventory(string discordUser, Hattington db = null)
         {
+            if(db == null)
+            {
+                db = new Hattington();
+            }
 
+            Inventory playerInventory = HattingtonDbEditor.GetPlayerInventory(discordUser, db);
+
+            if (playerInventory == null)
+            {
+                return null;
+            }
+
+            if (playerInventory.FoodItemsString.Length == 0)
+            {
+                // empty list
+                return new List<FoodItem>();
+            }
+
+            var foodItems = playerInventory.FoodItemsString.Split(",").ToList();
+
+            Dictionary<int, int> foodItemsDict = new Dictionary<int, int>();
+
+            foreach (string foodID in foodItems)
+            {
+                //Console.WriteLine(foodID);
+                int foodIntID = int.Parse(foodID);
+
+                if (!foodItemsDict.ContainsKey(foodIntID))
+                {
+                    foodItemsDict.Add(foodIntID, 1);
+                }
+                else
+                {
+                    foodItemsDict[foodIntID] += 1;
+                }
+            }
+
+            var foodList = new List<FoodItem>();
+
+            foreach (var foodItemKVP in foodItemsDict)
+            {
+                var item = new FoodItem
+                {
+                    Food = HattingtonDbEditor.GetFoodFromId(foodItemKVP.Key, db),
+                    Quantity = foodItemKVP.Value
+                };
+                foodList.Add(item);
+            }
+
+            return foodList;
+            
+        }
+
+        // DO LAST
+        // automatically choose a food for character to eat
+        // try to pick the most optimal food
+        // how to pick optimal food
+        // prioritize lowest energy food
+        public static async Task<EatLog> Eat(string discordUser)
+        {
+            using (var db = new Hattington())
+            {
+                var character =  HattingtonDbEditor.GetUserCharacter(discordUser, db);
+
+                // character doesn't exist
+                if(character == null)
+                {
+                    return new EatLog
+                    {
+                        IsValid = false,
+                        Error = "Character does not exist! Create a character using !addchar characterName"
+                    };
+                }
+
+                // character already full
+                if(character.Fullness == character.MaxFullness)
+                {
+                    return new EatLog
+                    {
+                        IsValid = false,
+                        Error = "Character is already full!"
+                    };
+                }
+
+                var foodItems = GetFoodItemsFromInventory(discordUser, db);
+
+                // no food to eat
+                if(foodItems.Count == 0)
+                {
+                    return new EatLog
+                    {
+                        IsValid = false,
+                        Error = "There is no food in the inventory! Get more food by using !forage or !hunt."
+                    };
+                }
+
+                FoodItem selectedFood = GetLowestEnergyFood(foodItems);
+
+                int originalFullness = character.Fullness;
+
+                var playerInventory = HattingtonDbEditor.GetPlayerInventory(discordUser, db);
+
+                playerInventory.FoodItemsString = GetNewFoodItemsStringAfterRemove(playerInventory, selectedFood.Food);
+
+                character.Fullness = Math.Min(character.Fullness + selectedFood.Food.Energy, character.MaxFullness);
+
+                await db.SaveChangesAsync();
+
+                return new EatLog
+                {
+                    IsValid = true,
+                    FullnessRestored = character.Fullness - originalFullness,
+                    FoodName = selectedFood.Food.Name,
+                    CharacterName = character.CharacterName,
+                    CurrentFullness = character.Fullness,
+                    AtMaxFullness = character.Fullness == character.MaxFullness
+                };
+            }
+        }
+
+        public static FoodItem GetLowestEnergyFood(List<FoodItem> foodItems)
+        {
+            // find food with lowest energy and return it
+            int lowestEnergy = 9999;
+
+            FoodItem selectedFood = null;
+
+            foreach (var item in foodItems)
+            {
+                if (item.Food.Energy < lowestEnergy)
+                {
+                    lowestEnergy = item.Food.Energy;
+                    selectedFood = item;
+                }
+            }
+
+            return selectedFood;
         }
     }
 }

@@ -13,6 +13,7 @@ namespace TitaniumEggBot.Modules
         // ReplyAsync is a method on ModuleBase 
 
         [Command("userinfo")]
+        [Summary("Returns the user")]
         public async Task UserInfoAsync(IUser user = null)
         {
             user = user ?? Context.User;
