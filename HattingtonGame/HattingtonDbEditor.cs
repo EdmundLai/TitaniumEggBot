@@ -37,54 +37,51 @@ namespace HattingtonGame
             }
         }
 
-        public static async Task<bool> LevelUpCharacter(string discordUser)
+        public static async Task<bool> LevelUpCharacter(string discordUser, Hattington db)
         {
             // if there is no character, don't level up and just return
-            await using(var db = new Hattington())
+
+            var character = GetUserCharacter(discordUser, db);
+
+            if(character != null)
             {
-                var character = GetUserCharacter(discordUser, db);
+                Random rand = new Random();
 
-                if(character != null)
-                {
-                    Random rand = new Random();
+                int healthIncrease = rand.Next(5, 11);
 
-                    int healthIncrease = rand.Next(5, 11);
+                character.Level += 1;
+                character.Health += healthIncrease;
+                character.MaxHealth += healthIncrease;
+                character.Attack += rand.Next(1, 3);
+                character.Defense += rand.Next(1, 3);
+                character.Magic += rand.Next(1, 3);
+                character.MagicDefense += rand.Next(1, 3);
+                character.MaxStamina += 5;
 
-                    character.Level += 1;
-                    character.Health += healthIncrease;
-                    character.MaxHealth += healthIncrease;
-                    character.Attack += rand.Next(1, 3);
-                    character.Defense += rand.Next(1, 3);
-                    character.Magic += rand.Next(1, 3);
-                    character.MagicDefense += rand.Next(1, 3);
-                    character.MaxStamina += 5;
+                await db.SaveChangesAsync();
 
-                    await db.SaveChangesAsync();
-
-                    return true;
-                }
-
-                return false;
+                return true;
             }
+
+            return false;
+
         }
 
-        public static async Task<bool> DeductFromCharacterStamina(string discordUser, int staminaCost)
+        public static async Task<bool> DeductFromCharacterStamina(string discordUser, int staminaCost, Hattington db)
         {
-            await using (var db = new Hattington())
+            var character = GetUserCharacter(discordUser, db);
+
+            if (character != null)
             {
-                var character = GetUserCharacter(discordUser, db);
+                character.Stamina -= staminaCost;
 
-                if (character != null)
-                {
-                    character.Stamina -= staminaCost;
+                await db.SaveChangesAsync();
 
-                    await db.SaveChangesAsync();
-
-                    return true;
-                }
-
-                return false;
+                return true;
             }
+
+            return false;
+
         }
 
         public static HatCharacter GetUserCharacter(string discordUser, Hattington db)

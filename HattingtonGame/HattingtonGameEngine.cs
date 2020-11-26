@@ -131,6 +131,11 @@ namespace HattingtonGame
             return HattingtonFoodHandler.GetRandomForagedFood();
         }
 
+        public static int CalculateExpNeededForLevelUp(int level)
+        {
+            return HattingtonFightHandler.CalculateExpNeededForLevelUp(level);
+        }
+
         // test method
         public static Hat GetFirstHat()
         {

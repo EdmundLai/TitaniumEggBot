@@ -11,10 +11,13 @@ namespace TitaniumEggBot
 {
     class Program
     {
-        public static IConfigurationRoot _configuration { get; set; }
+        private IConfigurationRoot _configuration { get; set; }
 
         public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
+        {
+            new Program().MainAsync().GetAwaiter().GetResult();
+        }
+            
 
         public async Task MainAsync()
         {

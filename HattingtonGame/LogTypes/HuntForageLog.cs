@@ -12,5 +12,7 @@ namespace HattingtonGame.LogTypes
 
         public string FoodCategory { get; set; }
 
+        public int StaminaCost { get; set; }
+
     }
 }

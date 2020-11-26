@@ -12,6 +12,13 @@ namespace TitaniumEggBot.Modules
 {
     public class HattingtonModule : ModuleBase<SocketCommandContext>
     {
+        private readonly CommandService _commandService;
+
+        public HattingtonModule(CommandService commandService)
+        {
+            _commandService = commandService;
+        }
+
         [Command("gethats")]
         [Summary("Gets the hats in the database.")]
         public async Task GetHatsAsync()
@@ -184,14 +191,17 @@ namespace TitaniumEggBot.Modules
             {
                 var embedFields = new List<EmbedFieldBuilder>();
 
-                string lastStatement = log.PlayerWin ? $"{log.CharacterName} was victorious over a {log.EnemyName}!" : $"{log.CharacterName} was defeated by a {log.EnemyName}.";
+                string lastStatement = log.PlayerWin ? $"{log.Character.CharacterName} was victorious over a {log.EnemyName}!" : $"{log.Character.CharacterName} was defeated by a {log.EnemyName}.";
+
+                string levelUpString = log.CharacterLeveledUp ? $"{log.Character.CharacterName} is now level {log.Character.Level}!" : "";
 
                 var concludingField = new EmbedFieldBuilder
                 {
                     Name = lastStatement,
-                    Value = $"{log.DamageTakenByPlayer} damage taken by {log.CharacterName}\n" +
+                    Value = $"{log.DamageTakenByPlayer} damage taken by {log.Character.CharacterName}\n" +
                     $"{log.DamageTakenByEnemy} damage taken by {log.EnemyName}\n" +
-                    $"{log.ExpGained} Exp Gained."
+                    $"{log.Character.Experience}/{HattingtonGameEngine.CalculateExpNeededForLevelUp(log.Character.Level)} Exp (+{log.ExpGained}).\n" +
+                    $"{levelUpString}"
                 };
 
                 embedFields.Add(concludingField);
@@ -229,13 +239,13 @@ namespace TitaniumEggBot.Modules
                 var mainField = new EmbedFieldBuilder
                 {
                     Name = "Details",
-                    Value = $"+{log.StaminaGained} stamina\n" +
-                    $"-{log.FullnessCost} fullness"
+                    Value = $"{log.Character.Stamina}/{log.Character.MaxStamina} stamina (+{log.StaminaGained})\n" +
+                    $"{log.Character.Fullness}/{log.Character.MaxFullness} fullness (-{log.FullnessCost})"
                 };
 
                 embedFields.Add(mainField);
 
-                var embed = HattingtonUtilities.CreateEmbed($"{log.CharacterName} is now rested!", embedFields, Context);
+                var embed = HattingtonUtilities.CreateEmbed($"{log.Character.CharacterName} is now rested!", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
@@ -258,13 +268,13 @@ namespace TitaniumEggBot.Modules
                 var mainField = new EmbedFieldBuilder
                 {
                     Name = "Details",
-                    Value = $"+{log.HealthGained} health\n" +
-                    $"-{log.StaminaCost} stamina"
+                    Value = $"{log.Character.Health}/{log.Character.MaxHealth} health (+{log.HealthGained})\n" +
+                    $"{log.Character.Stamina}/{log.Character.MaxStamina} stamina (-{log.StaminaCost})"
                 };
 
                 embedFields.Add(mainField);
 
-                var embed = HattingtonUtilities.CreateEmbed($"{log.CharacterName} has regained health!", embedFields, Context);
+                var embed = HattingtonUtilities.CreateEmbed($"{log.Character.CharacterName} has regained health!", embedFields, Context);
 
                 await ReplyAsync(embed: embed);
             }
@@ -316,7 +326,8 @@ namespace TitaniumEggBot.Modules
                 {
                     Name = $"{huntLog.FoodName} found!",
                     Value = $"{huntLog.FoodCategory} Item\n" +
-                    $"Restores {huntLog.Energy} fullness"
+                    $"Restores {huntLog.Energy} fullness\n" +
+                    $"{huntLog.Character.Stamina}/{huntLog.Character.MaxStamina} stamina (-{huntLog.StaminaCost})"
                 };
 
                 embedFields.Add(mainField);
@@ -372,13 +383,10 @@ namespace TitaniumEggBot.Modules
             {
                 var embedFields = new List<EmbedFieldBuilder>();
 
-                string maxFullnessLine = eatLog.AtMaxFullness ? $"{eatLog.CharacterName} is now completely full." : "";
-
                 var mainField = new EmbedFieldBuilder
                 {
-                    Name = $"{eatLog.CharacterName} ate a {eatLog.FoodName}!",
-                    Value = $"{eatLog.CharacterName} now has {eatLog.CurrentFullness} fullness.\n" +
-                    $"{maxFullnessLine}"
+                    Name = $"{eatLog.Character.CharacterName} ate a {eatLog.FoodName}!",
+                    Value = $"{eatLog.Character.Fullness}/{eatLog.Character.MaxFullness} fullness (+{eatLog.FullnessRestored})\n"
                 };
 
                 embedFields.Add(mainField);

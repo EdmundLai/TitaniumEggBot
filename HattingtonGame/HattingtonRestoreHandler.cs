@@ -62,7 +62,7 @@ namespace HattingtonGame
                 return new RestLog
                 {
                     IsValid = true,
-                    CharacterName = character.CharacterName,
+                    Character = character,
                     StaminaGained = character.Stamina - originalStamina,
                     FullnessCost = originalFullness - character.Fullness,
                 };
@@ -120,7 +120,7 @@ namespace HattingtonGame
                 return new HealLog
                 {
                     IsValid = true,
-                    CharacterName = character.CharacterName,
+                    Character = character,
                     HealthGained = character.Health - originalHealth,
                     StaminaCost = staminaCost,
                 };

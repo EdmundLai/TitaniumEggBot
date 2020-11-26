@@ -10,9 +10,5 @@ namespace HattingtonGame.LogTypes
 
         public string FoodName { get; set; }
 
-        public int CurrentFullness { get; set; }
-
-        public bool AtMaxFullness { get; set; }
-
     }
 }

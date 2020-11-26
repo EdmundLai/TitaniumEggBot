@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HattingtonGame.DbTypes;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,6 +14,7 @@ namespace HattingtonGame.LogTypes
         // Error is set if IsValid if false (Tells reason why fight is not valid)
         public string Error { get; set; }
 
-        public string CharacterName { get; set; }
+        public HatCharacter Character { get; set; }
+
     }
 }

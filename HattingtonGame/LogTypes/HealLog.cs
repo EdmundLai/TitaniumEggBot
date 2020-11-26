@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HattingtonGame.DbTypes;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,5 +10,6 @@ namespace HattingtonGame.LogTypes
         public int HealthGained { get; set; }
 
         public int StaminaCost { get; set; }
+
     }
 }

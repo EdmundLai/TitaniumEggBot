@@ -92,22 +92,21 @@ namespace HattingtonGame
 
                 await db.SaveChangesAsync();
 
-                string characterName = character.CharacterName;
-
                 string foodCategory = HattingtonDbEditor.GetFoodCategory(randomFood.ItemTypeID, db);
 
                 if(foodTypeID == huntTypeID)
                 {
-                    await HattingtonDbEditor.DeductFromCharacterStamina(discordUser, staminaCost);
+                    await HattingtonDbEditor.DeductFromCharacterStamina(discordUser, staminaCost, db);
                 }
 
                 return new HuntForageLog
                 {
                     IsValid = true,
-                    CharacterName = characterName,
+                    Character = character,
                     FoodCategory = foodCategory,
                     FoodName = randomFood.Name,
                     Energy = randomFood.Energy,
+                    StaminaCost = staminaCost,
                 };
             }
         }
@@ -230,6 +229,8 @@ namespace HattingtonGame
             {
                 var foodItems = GetFoodItemsFromInventory(discordUser, db);
 
+                var character = HattingtonDbEditor.GetUserCharacter(discordUser, db);
+
                 if(foodItems == null)
                 {
                     return new InventoryLog
@@ -252,7 +253,7 @@ namespace HattingtonGame
                 return new InventoryLog
                 {
                     IsValid = true,
-                    CharacterName = HattingtonDbEditor.GetUserCharacterName(discordUser, db),
+                    Character = character,
                     Items = foodItems
 
                 };
@@ -375,9 +376,7 @@ namespace HattingtonGame
                     IsValid = true,
                     FullnessRestored = character.Fullness - originalFullness,
                     FoodName = selectedFood.Food.Name,
-                    CharacterName = character.CharacterName,
-                    CurrentFullness = character.Fullness,
-                    AtMaxFullness = character.Fullness == character.MaxFullness
+                    Character = character
                 };
             }
         }

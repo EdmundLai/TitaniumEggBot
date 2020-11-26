@@ -182,7 +182,7 @@ namespace HattingtonGame
 
                 int staminaCost = 10;
 
-                await HattingtonDbEditor.DeductFromCharacterStamina(discordUser, staminaCost);
+                await HattingtonDbEditor.DeductFromCharacterStamina(discordUser, staminaCost, db);
 
                 // need to calculate/factor in experience gain
                 // exp gain should be a db column
@@ -207,14 +207,14 @@ namespace HattingtonGame
                         characterLeveledUp = true;
 
                         // is replacement for below code
-                        await HattingtonDbEditor.LevelUpCharacter(discordUser);
+                        await HattingtonDbEditor.LevelUpCharacter(discordUser, db);
 
                         character.Experience = newExperience - expNeededForLevelUp;
 
                         newExperience = character.Experience;
 
                         // recalculate exp needed for levelup using new character level
-                        expNeededForLevelUp = 50 + 50 * (character.Level - 1);
+                        expNeededForLevelUp = CalculateExpNeededForLevelUp(character.Level);
                     }
 
                     character.Experience = newExperience;
@@ -230,7 +230,7 @@ namespace HattingtonGame
                     PlayerEndHealth = playerCurrHealth,
                     PlayerFirst = playerInitiative,
                     PlayerWin = playerWin,
-                    CharacterName = character.CharacterName,
+                    Character = character,
                     EnemyName = chosenEnemy.Name,
                     ExpGained = expGained,
                     DamageTakenByPlayer = damageTakenByPlayer,
@@ -238,6 +238,11 @@ namespace HattingtonGame
                     CharacterLeveledUp = characterLeveledUp,
                 };
             }
+        }
+
+        public static int CalculateExpNeededForLevelUp(int level)
+        {
+            return 50 + 50 * (level - 1);
         }
 
         static Enemy GetChosenEnemy(HatCharacter character)
